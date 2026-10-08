@@ -1,21 +1,26 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS, RADIUS } from '../constants/theme';
 
 function Meta({ icon, text }) {
   return (
     <View style={styles.meta}>
-      <Ionicons name={icon} size={14} color="#64748b" />
+      <Ionicons name={icon} size={14} color={COLORS.textMuted} />
       <Text style={styles.metaText} numberOfLines={1}>{text}</Text>
     </View>
   );
 }
 
 export default function JobCard({ job, onPress }) {
+  const router = useRouter();
+  const open = onPress || (() => router.push(`/(applicant)/job/${job.id}`));
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={styles.card} onPress={open} activeOpacity={0.85}>
       <View style={styles.topRow}>
         <View style={styles.iconBox}>
-          <Ionicons name="briefcase-outline" size={22} color="#1d4ed8" />
+          <Ionicons name="briefcase-outline" size={22} color={COLORS.primary} />
         </View>
         <View style={styles.titleWrap}>
           <Text style={styles.title} numberOfLines={1}>{job.title}</Text>
@@ -40,34 +45,39 @@ export default function JobCard({ job, onPress }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBox: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: '#eff6ff',
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   titleWrap: { flex: 1 },
-  title: { fontSize: 16, fontWeight: '700', color: '#0f172a' },
-  company: { fontSize: 13, color: '#64748b', marginTop: 2 },
+  title: { fontSize: 16, fontWeight: '700', color: COLORS.text },
+  company: { fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
   match: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: '#dcfce7',
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.primaryLight,
   },
-  matchText: { fontSize: 12, fontWeight: '700', color: '#15803d' },
+  matchText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
   metaRow: { flexDirection: 'row', gap: 16, marginTop: 12 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
-  metaText: { fontSize: 13, color: '#64748b' },
-  salary: { fontSize: 14, fontWeight: '600', color: '#1d4ed8', marginTop: 10 },
+  metaText: { fontSize: 13, color: COLORS.textMuted },
+  salary: { fontSize: 14, fontWeight: '700', color: COLORS.primary, marginTop: 10 },
 });
