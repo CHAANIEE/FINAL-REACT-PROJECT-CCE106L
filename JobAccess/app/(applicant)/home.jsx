@@ -8,13 +8,23 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { logout } from '../../src/features/auth/authService';
 import { useApprovedJobs } from '../../src/features/postings/usePostings';
 import { useMyApplications } from '../../src/features/applications/useApplications';
 import JobCard from '../../src/components/JobCard';
+import { COLORS, RADIUS } from '../../src/constants/theme';
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning,';
+  if (hour < 18) return 'Good afternoon,';
+  return 'Good evening,';
+}
 
 export default function ApplicantHome() {
+  const insets = useSafeAreaInsets();
   const { user, profile } = useAuth();
   const router = useRouter();
   const { data: jobs, loading, error } = useApprovedJobs();
@@ -26,8 +36,8 @@ export default function ApplicantHome() {
       label: 'Applied',
       value: applications.length,
       icon: 'paper-plane-outline',
-      color: '#1d4ed8',
-      bg: '#eff6ff',
+      color: COLORS.blue,
+      bg: COLORS.blueSoft,
     },
     {
       label: 'Shortlisted',
@@ -40,33 +50,34 @@ export default function ApplicantHome() {
       label: 'Interviews',
       value: applications.filter((a) => a.status === 'interview').length,
       icon: 'calendar-outline',
-      color: '#15803d',
-      bg: '#dcfce7',
+      color: COLORS.primary,
+      bg: COLORS.primaryLight,
     },
   ];
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.hello}>Hello, {firstName}</Text>
-          <Text style={styles.sub}>Find your next job in Tagum City</Text>
+      {/* Green header card with greeting and search */}
+      <View style={[styles.hero, { paddingTop: insets.top + 16 }]}>
+        <View style={styles.heroTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greeting}>{getGreeting()}</Text>
+            <Text style={styles.name}>{firstName}</Text>
+          </View>
+          <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.8}>
+            <Ionicons name="log-out-outline" size={20} color={COLORS.primaryDark} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-          <Ionicons name="log-out-outline" size={22} color="#475569" />
+
+        <TouchableOpacity
+          style={styles.search}
+          activeOpacity={0.8}
+          onPress={() => router.push('/(applicant)/search')}
+        >
+          <Ionicons name="search-outline" size={20} color={COLORS.textMuted} />
+          <Text style={styles.searchText}>Search jobs, companies, barangays</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Search bar */}
-      <TouchableOpacity
-        style={styles.search}
-        activeOpacity={0.8}
-        onPress={() => router.push('/(applicant)/search')}
-      >
-        <Ionicons name="search-outline" size={20} color="#64748b" />
-        <Text style={styles.searchText}>Search jobs, companies, barangays</Text>
-      </TouchableOpacity>
 
       {/* Stats */}
       <View style={styles.statsRow}>
@@ -84,14 +95,17 @@ export default function ApplicantHome() {
       {/* PESO-approved jobs */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Job Openings</Text>
-        <Text style={styles.verified}>PESO verified</Text>
+        <View style={styles.verifiedBadge}>
+          <Ionicons name="shield-checkmark" size={12} color={COLORS.primary} />
+          <Text style={styles.verified}>PESO verified</Text>
+        </View>
       </View>
 
-      {loading && <ActivityIndicator style={{ marginTop: 24 }} color="#1d4ed8" />}
+      {loading && <ActivityIndicator style={{ marginTop: 24 }} color={COLORS.primary} />}
 
       {!!error && (
         <View style={styles.errorBox}>
-          <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+          <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
@@ -99,7 +113,7 @@ export default function ApplicantHome() {
       {!loading && !error && jobs.length === 0 && (
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="briefcase-outline" size={32} color="#1d4ed8" />
+            <Ionicons name="briefcase-outline" size={32} color={COLORS.primary} />
           </View>
           <Text style={styles.emptyTitle}>No job openings yet</Text>
           <Text style={styles.emptyNote}>
@@ -108,24 +122,34 @@ export default function ApplicantHome() {
         </View>
       )}
 
-      {jobs.map((job) => (
-        <JobCard key={job.id} job={job} />
-      ))}
+      <View style={styles.jobList}>
+        {jobs.map((job) => (
+          <JobCard key={job.id} job={job} />
+        ))}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8fafc' },
-  content: { padding: 20, paddingTop: 56, paddingBottom: 32 },
-  header: { flexDirection: 'row', alignItems: 'center' },
-  hello: { fontSize: 26, fontWeight: '800', color: '#0f172a' },
-  sub: { fontSize: 14, color: '#64748b', marginTop: 2 },
+  screen: { flex: 1, backgroundColor: COLORS.bg },
+  content: { paddingBottom: 32 },
+
+  hero: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  heroTop: { flexDirection: 'row', alignItems: 'center' },
+  greeting: { fontSize: 14, color: COLORS.primaryLight },
+  name: { fontSize: 26, fontWeight: '800', color: '#ffffff', marginTop: 2 },
   logoutBtn: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -136,59 +160,84 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 14,
     marginTop: 20,
-    borderRadius: 14,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surface,
   },
-  searchText: { color: '#94a3b8', fontSize: 15 },
-  statsRow: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  searchText: { color: COLORS.textMuted, fontSize: 15 },
+
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
   statCard: {
     flex: 1,
     padding: 14,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: COLORS.border,
   },
   statIcon: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
   },
-  statValue: { fontSize: 22, fontWeight: '800', color: '#0f172a' },
-  statLabel: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  statValue: { fontSize: 22, fontWeight: '800', color: COLORS.text },
+  statLabel: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
+
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 28,
     marginBottom: 12,
+    paddingHorizontal: 20,
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a' },
-  verified: { fontSize: 13, fontWeight: '600', color: '#15803d' },
-  empty: { alignItems: 'center', paddingVertical: 40 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.primaryDark },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.primaryLight,
+  },
+  verified: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+
+  jobList: { paddingHorizontal: 20 },
+
+  empty: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyIcon: {
     width: 64,
     height: 64,
-    borderRadius: 18,
-    backgroundColor: '#eff6ff',
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#0f172a' },
-  emptyNote: { fontSize: 14, color: '#64748b', marginTop: 4, textAlign: 'center' },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
+  emptyNote: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginHorizontal: 20,
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#fef2f2',
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.dangerBg,
   },
-  errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
+  errorText: { flex: 1, color: COLORS.danger, fontSize: 14 },
 });
