@@ -7,17 +7,23 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdminNotifications } from '../../src/features/notifications/useNotifications';
 import {
   markNotificationRead,
   markAllRead,
 } from '../../src/features/notifications/notificationService';
+import { COLORS, RADIUS } from '../../src/constants/theme';
 
 const TYPE_ICON = {
-  vacancy_submitted: { name: 'document-text-outline', color: '#1d4ed8', bg: '#dbeafe' },
-  application_submitted: { name: 'person-add-outline', color: '#15803d', bg: '#dcfce7' },
+  vacancy_submitted: { name: 'document-text-outline', color: COLORS.blue, bg: COLORS.blueSoft },
+  application_submitted: {
+    name: 'person-add-outline',
+    color: COLORS.primary,
+    bg: COLORS.primaryLight,
+  },
 };
-const DEFAULT_ICON = { name: 'notifications-outline', color: '#475569', bg: '#e2e8f0' };
+const DEFAULT_ICON = { name: 'notifications-outline', color: COLORS.primaryDark, bg: '#e2e8f0' };
 
 function timeAgo(ts) {
   if (!ts?.seconds) return 'Just now';
@@ -34,11 +40,15 @@ function timeAgo(ts) {
 }
 
 export default function AdminAlerts() {
+  const insets = useSafeAreaInsets();
   const { data: alerts, loading, error } = useAdminNotifications();
   const unread = alerts.filter((n) => !n.read).length;
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+    >
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.heading}>Alerts</Text>
@@ -47,17 +57,21 @@ export default function AdminAlerts() {
           </Text>
         </View>
         {unread > 0 && (
-          <TouchableOpacity onPress={() => markAllRead(alerts)}>
+          <TouchableOpacity
+            style={styles.markAllBtn}
+            onPress={() => markAllRead(alerts)}
+            activeOpacity={0.8}
+          >
             <Text style={styles.markAll}>Mark all as read</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {loading && <ActivityIndicator style={{ marginTop: 24 }} color="#0f172a" />}
+      {loading && <ActivityIndicator style={{ marginTop: 24 }} color={COLORS.primary} />}
 
       {!!error && (
         <View style={styles.errorBox}>
-          <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+          <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
@@ -65,7 +79,7 @@ export default function AdminAlerts() {
       {!loading && !error && alerts.length === 0 && (
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="notifications-outline" size={32} color="#0f172a" />
+            <Ionicons name="notifications-outline" size={32} color={COLORS.primary} />
           </View>
           <Text style={styles.emptyTitle}>No alerts yet</Text>
           <Text style={styles.emptyNote}>
@@ -100,55 +114,64 @@ export default function AdminAlerts() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8fafc' },
-  content: { padding: 20, paddingBottom: 40 },
+  screen: { flex: 1, backgroundColor: COLORS.bg },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  heading: { fontSize: 24, fontWeight: '800', color: '#0f172a' },
-  sub: { fontSize: 14, color: '#64748b', marginTop: 4 },
-  markAll: { fontSize: 14, fontWeight: '700', color: '#1d4ed8' },
+  heading: { fontSize: 26, fontWeight: '800', color: COLORS.primaryDark },
+  sub: { fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+  markAllBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.primaryLight,
+  },
+  markAll: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+
   empty: { alignItems: 'center', paddingVertical: 40 },
   emptyIcon: {
     width: 64,
     height: 64,
-    borderRadius: 18,
-    backgroundColor: '#e2e8f0',
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#0f172a' },
-  emptyNote: { fontSize: 14, color: '#64748b', marginTop: 4, textAlign: 'center' },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
+  emptyNote: { fontSize: 14, color: COLORS.textMuted, marginTop: 4, textAlign: 'center' },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     padding: 12,
     marginBottom: 12,
-    borderRadius: 10,
-    backgroundColor: '#fef2f2',
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.dangerBg,
   },
-  errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
+  errorText: { flex: 1, color: COLORS.danger, fontSize: 14 },
+
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
     padding: 14,
     marginBottom: 10,
-    borderRadius: 14,
-    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: COLORS.border,
   },
-  cardUnread: { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' },
+  cardUnread: { backgroundColor: COLORS.primarySoft, borderColor: COLORS.primaryLight },
   iconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
-  message: { fontSize: 14, color: '#334155', marginTop: 2, lineHeight: 20 },
-  time: { fontSize: 12, color: '#94a3b8', marginTop: 6 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#1d4ed8', marginTop: 4 },
+  title: { fontSize: 15, fontWeight: '700', color: COLORS.text },
+  message: { fontSize: 14, color: COLORS.textBody, marginTop: 2, lineHeight: 20 },
+  time: { fontSize: 12, color: '#9ca3af', marginTop: 6 },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.primary, marginTop: 4 },
 });
