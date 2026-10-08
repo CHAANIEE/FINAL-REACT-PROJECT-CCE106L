@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -8,19 +9,29 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { useMyApplications } from '../../src/features/applications/useApplications';
 import { STATUS_LABELS } from '../../src/features/applications/statusMachine';
 import StatusTimeline from '../../src/components/StatusTimeline';
+import { COLORS, RADIUS } from '../../src/constants/theme';
 
 const STATUS_COLORS = {
   submitted: { color: '#475569', bg: '#e2e8f0' },
-  under_review: { color: '#1d4ed8', bg: '#dbeafe' },
+  under_review: { color: COLORS.blue, bg: '#dbeafe' },
   shortlisted: { color: '#b45309', bg: '#fef3c7' },
   interview: { color: '#7e22ce', bg: '#f3e8ff' },
-  hired: { color: '#15803d', bg: '#dcfce7' },
-  not_selected: { color: '#b91c1c', bg: '#fee2e2' },
+  hired: { color: COLORS.primary, bg: COLORS.primaryLight },
+  not_selected: { color: COLORS.danger, bg: '#fee2e2' },
 };
+
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'submitted', label: 'Submitted' },
+  { key: 'under_review', label: 'Under Review' },
+  { key: 'shortlisted', label: 'Shortlisted' },
+  { key: 'interview', label: 'Interview' },
+];
 
 function formatDate(ts) {
   if (!ts?.seconds) return '';
@@ -32,110 +43,181 @@ function formatDate(ts) {
 }
 
 export default function ApplicationsScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const router = useRouter();
   const { data: applications, loading, error } = useMyApplications(user?.uid);
+  const [filter, setFilter] = useState('all');
+
+  const visible =
+    filter === 'all' ? applications : applications.filter((a) => a.status === filter);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      {loading && <ActivityIndicator style={{ marginTop: 24 }} color="#1d4ed8" />}
+    <View style={styles.screen}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <Text style={styles.heading}>My Applications</Text>
+        <Text style={styles.subheading}>
+          {applications.length} application{applications.length === 1 ? '' : 's'} total
+        </Text>
+      </View>
 
-      {!!error && (
-        <View style={styles.errorBox}>
-          <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipScroll}
+        contentContainerStyle={styles.chipRow}
+      >
+        {FILTERS.map((f) => {
+          const active = filter === f.key;
+          return (
+            <TouchableOpacity
+              key={f.key}
+              style={[styles.chip, active && styles.chipActive]}
+              onPress={() => setFilter(f.key)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                {f.label}
+                {f.key === 'all' ? ` (${applications.length})` : ''}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
-      {!loading && !error && applications.length === 0 && (
-        <View style={styles.empty}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="document-text-outline" size={32} color="#1d4ed8" />
+      <ScrollView contentContainerStyle={styles.content}>
+        {loading && <ActivityIndicator style={{ marginTop: 24 }} color={COLORS.primary} />}
+
+        {!!error && (
+          <View style={styles.errorBox}>
+            <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
+            <Text style={styles.errorText}>{error}</Text>
           </View>
-          <Text style={styles.emptyTitle}>No applications yet</Text>
-          <Text style={styles.emptyNote}>Jobs you apply for will be tracked here.</Text>
-          <TouchableOpacity
-            style={styles.browseBtn}
-            onPress={() => router.push('/(applicant)/search')}
-          >
-            <Text style={styles.browseText}>Browse jobs</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {applications.map((app) => {
-        const st = STATUS_COLORS[app.status] || STATUS_COLORS.submitted;
-        return (
-          <View key={app.id} style={styles.card}>
-            <View style={styles.cardTop}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title} numberOfLines={1}>{app.jobTitle}</Text>
-                <Text style={styles.company} numberOfLines={1}>{app.company}</Text>
-                {!!formatDate(app.createdAt) && (
-                  <Text style={styles.date}>Applied {formatDate(app.createdAt)}</Text>
-                )}
+        {!loading && !error && applications.length === 0 && (
+          <View style={styles.empty}>
+            <View style={styles.emptyIcon}>
+              <Ionicons name="document-text-outline" size={32} color={COLORS.primary} />
+            </View>
+            <Text style={styles.emptyTitle}>No applications yet</Text>
+            <Text style={styles.emptyNote}>Jobs you apply for will be tracked here.</Text>
+            <TouchableOpacity
+              style={styles.browseBtn}
+              onPress={() => router.push('/(applicant)/search')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.browseText}>Browse jobs</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!loading && !error && applications.length > 0 && visible.length === 0 && (
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>No applications in this status</Text>
+            <Text style={styles.emptyNote}>Try another filter above.</Text>
+          </View>
+        )}
+
+        {visible.map((app) => {
+          const st = STATUS_COLORS[app.status] || STATUS_COLORS.submitted;
+          return (
+            <View key={app.id} style={styles.card}>
+              <View style={styles.cardTop}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.title} numberOfLines={1}>{app.jobTitle}</Text>
+                  <Text style={styles.company} numberOfLines={1}>{app.company}</Text>
+                  {!!formatDate(app.createdAt) && (
+                    <Text style={styles.date}>Applied {formatDate(app.createdAt)}</Text>
+                  )}
+                </View>
+                <View style={[styles.pill, { backgroundColor: st.bg }]}>
+                  <Text style={[styles.pillText, { color: st.color }]}>
+                    {STATUS_LABELS[app.status] || app.status}
+                  </Text>
+                </View>
               </View>
-              <View style={[styles.pill, { backgroundColor: st.bg }]}>
-                <Text style={[styles.pillText, { color: st.color }]}>
-                  {STATUS_LABELS[app.status] || app.status}
-                </Text>
+              <View style={{ marginTop: 14 }}>
+                <StatusTimeline status={app.status} />
               </View>
             </View>
-            <View style={{ marginTop: 14 }}>
-              <StatusTimeline status={app.status} />
-            </View>
-          </View>
-        );
-      })}
-    </ScrollView>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8fafc' },
+  screen: { flex: 1, backgroundColor: COLORS.bg },
+  header: { paddingHorizontal: 20 },
+  heading: { fontSize: 26, fontWeight: '800', color: COLORS.primaryDark },
+  subheading: { fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+
+  chipScroll: { marginTop: 16, flexGrow: 0 },
+  chipRow: { paddingHorizontal: 20, gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.surface,
+  },
+  chipActive: { backgroundColor: COLORS.primary },
+  chipText: { fontSize: 13, fontWeight: '600', color: COLORS.primary },
+  chipTextActive: { color: '#ffffff' },
+
   content: { padding: 20, paddingBottom: 40 },
   empty: { alignItems: 'center', paddingVertical: 40 },
   emptyIcon: {
     width: 64,
     height: 64,
-    borderRadius: 18,
-    backgroundColor: '#eff6ff',
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#0f172a' },
-  emptyNote: { fontSize: 14, color: '#64748b', marginTop: 4, textAlign: 'center' },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
+  emptyNote: { fontSize: 14, color: COLORS.textMuted, marginTop: 4, textAlign: 'center' },
   browseBtn: {
     marginTop: 16,
     paddingHorizontal: 22,
     paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#1d4ed8',
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primary,
   },
   browseText: { color: '#ffffff', fontWeight: '700' },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     padding: 12,
     marginBottom: 12,
-    borderRadius: 10,
-    backgroundColor: '#fef2f2',
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.dangerBg,
   },
-  errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
+  errorText: { flex: 1, color: COLORS.danger, fontSize: 14 },
+
   card: {
     padding: 16,
     marginBottom: 12,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  title: { fontSize: 16, fontWeight: '700', color: '#0f172a' },
-  company: { fontSize: 13, color: '#64748b', marginTop: 2 },
-  date: { fontSize: 12, color: '#94a3b8', marginTop: 4 },
-  pill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  title: { fontSize: 16, fontWeight: '700', color: COLORS.text },
+  company: { fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+  date: { fontSize: 12, color: '#9ca3af', marginTop: 4 },
+  pill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill },
   pillText: { fontSize: 12, fontWeight: '700' },
 });
