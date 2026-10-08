@@ -30,7 +30,7 @@ function listen(q, onData, onError) {
   );
 }
 
-// Employer submits a vacancy. It always starts as "pending" and alerts the admin.
+// Employer posts a vacancy. It goes live immediately and PESO is notified to review it.
 export async function createPosting({
   employerId,
   company,
@@ -53,15 +53,16 @@ export async function createPosting({
     salary,
     description,
     requirements,
-    status: 'pending',
+    status: 'live',
+    reviewed: false,
     createdAt: serverTimestamp(),
   });
 
   batch.set(doc(notificationsRef), {
     audience: 'admin',
     type: 'vacancy_submitted',
-    title: 'New vacancy for review',
-    message: `${company} submitted "${title}".`,
+    title: 'New vacancy to review',
+    message: `${company} posted "${title}". It is live and waiting for review.`,
     refId: jobRef.id,
     read: false,
     createdAt: serverTimestamp(),
@@ -71,41 +72,50 @@ export async function createPosting({
   return jobRef;
 }
 
-// Admin decision: status = 'approved' or 'rejected'. Alerts the employer.
-export async function reviewPosting(jobId, status, adminId) {
+// Admin action on a live vacancy.
+// action: 'reviewed' marks it as checked. 'removed' takes it down and alerts the employer.
+export async function reviewPosting(jobId, action, adminId) {
   const jobRef = doc(db, 'jobs', jobId);
   const snap = await getDoc(jobRef);
   if (!snap.exists()) throw new Error('This vacancy no longer exists.');
   const job = snap.data();
 
-  const approved = status === 'approved';
   const batch = writeBatch(db);
 
-  batch.update(jobRef, {
-    status,
-    reviewedBy: adminId,
-    reviewedAt: serverTimestamp(),
-  });
+  if (action === 'reviewed') {
+    batch.update(jobRef, {
+      reviewed: true,
+      reviewedBy: adminId,
+      reviewedAt: serverTimestamp(),
+    });
+  } else if (action === 'removed') {
+    batch.update(jobRef, {
+      status: 'removed',
+      reviewed: true,
+      reviewedBy: adminId,
+      reviewedAt: serverTimestamp(),
+    });
 
-  batch.set(doc(notificationsRef), {
-    audience: 'user',
-    userId: job.employerId,
-    type: approved ? 'vacancy_approved' : 'vacancy_rejected',
-    title: approved ? 'Vacancy approved' : 'Vacancy rejected',
-    message: approved
-      ? `Your vacancy "${job.title}" is now live for job seekers.`
-      : `Your vacancy "${job.title}" was not approved by PESO.`,
-    refId: jobId,
-    read: false,
-    createdAt: serverTimestamp(),
-  });
+    batch.set(doc(notificationsRef), {
+      audience: 'user',
+      userId: job.employerId,
+      type: 'vacancy_removed',
+      title: 'Vacancy taken down',
+      message: `Your vacancy "${job.title}" was taken down by PESO and is no longer visible to job seekers.`,
+      refId: jobId,
+      read: false,
+      createdAt: serverTimestamp(),
+    });
+  } else {
+    throw new Error('Unknown review action.');
+  }
 
   await batch.commit();
 }
 
-// Job Seekers see approved jobs only
+// Job seekers see live vacancies only
 export function listenApprovedJobs(onData, onError) {
-  return listen(query(jobsRef, where('status', '==', 'approved')), onData, onError);
+  return listen(query(jobsRef, where('status', '==', 'live')), onData, onError);
 }
 
 // Employer sees only their own postings
@@ -113,7 +123,7 @@ export function listenEmployerPostings(employerId, onData, onError) {
   return listen(query(jobsRef, where('employerId', '==', employerId)), onData, onError);
 }
 
-// Admin approval queue
+// Admin "Under review" queue: live vacancies PESO has not checked yet
 export function listenPendingPostings(onData, onError) {
-  return listen(query(jobsRef, where('status', '==', 'pending')), onData, onError);
+  return listen(query(jobsRef, where('reviewed', '==', false)), onData, onError);
 }
