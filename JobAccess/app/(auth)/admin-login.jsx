@@ -9,11 +9,15 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ROLES } from '../../src/constants/roles';
 import { login } from '../../src/features/auth/authService';
+
+const GREEN = '#15803d';
+const GREEN_DARK = '#14532d';
 
 export default function AdminLoginScreen() {
   const [email, setEmail] = useState('');
@@ -48,137 +52,216 @@ export default function AdminLoginScreen() {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.logo}>
-            <Ionicons name="shield-checkmark" size={32} color="#ffffff" />
+            <Image
+              source={require('../../assets/peesotagum.jpg')}
+              style={styles.sealImage}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.title}>PESO Admin</Text>
-          <Text style={styles.subtitle}>
-            Authorized PESO Tagum staff only
+          <Text style={styles.brand}>JobAccess</Text>
+          <Text style={styles.pesoName}>PESO TAGUM</Text>
+          <Text style={styles.office}>
+            Public Employment Service Office{'\n'}Tagum City
           </Text>
         </View>
 
-        <Text style={styles.label}>Staff email</Text>
-        <View style={styles.inputWrap}>
-          <Ionicons name="mail-outline" size={20} color="#64748b" />
-          <TextInput
-            style={styles.input}
-            placeholder="staff@example.com"
-            placeholderTextColor="#94a3b8"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
-
-        <Text style={styles.label}>Password</Text>
-        <View style={styles.inputWrap}>
-          <Ionicons name="lock-closed-outline" size={20} color="#64748b" />
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#94a3b8"
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword((s) => !s)}>
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={20}
-              color="#64748b"
-            />
-          </TouchableOpacity>
-        </View>
-
-        {!!error && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
-            <Text style={styles.errorText}>{error}</Text>
+        {/* Card */}
+        <View style={styles.card}>
+          <View style={styles.badge}>
+            <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
+            <Text style={styles.badgeText}>STAFF PORTAL</Text>
           </View>
-        )}
+          <Text style={styles.welcome}>PESO Admin</Text>
+          <Text style={styles.welcomeSub}>Authorized PESO Tagum staff only</Text>
 
-        <TouchableOpacity
-          style={[styles.submit, loading && styles.submitDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-          activeOpacity={0.85}
-        >
-          {loading ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.submitText}>Log In as Admin</Text>
+          {/* Email */}
+          <Text style={styles.label}>Staff email</Text>
+          <View style={styles.inputWrap}>
+            <Ionicons name="mail-outline" size={20} color="#6b7280" />
+            <TextInput
+              style={styles.input}
+              placeholder="staff@example.com"
+              placeholderTextColor="#9ca3af"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
+
+          {/* Password */}
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.inputWrap}>
+            <Ionicons name="lock-closed-outline" size={20} color="#6b7280" />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword((s) => !s)}>
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#6b7280"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {!!error && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
           )}
-        </TouchableOpacity>
 
-        <View style={styles.footer}>
-          <Ionicons name="arrow-back" size={16} color="#1d4ed8" />
-          <Link href="/(auth)/login" style={styles.link}>
-            Back to Job Seeker / Employer login
-          </Link>
+          {/* Login button */}
+          <TouchableOpacity
+            style={[styles.submit, loading && styles.submitDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.submitText}>Log In as Admin  →</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Back link */}
+          <View style={styles.backRow}>
+            <Ionicons name="arrow-back" size={16} color={GREEN} />
+            <Link href="/(auth)/login" style={styles.link}>
+              Back to Job Seeker / Employer login
+            </Link>
+          </View>
         </View>
+
+        <Text style={styles.tagline}>Trabaho para sa Mas Maunlad na Tagum!</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#ffffff' },
-  container: { flexGrow: 1, padding: 24, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 32 },
+  flex: { flex: 1, backgroundColor: '#f0fdf4' },
+  container: { flexGrow: 1, padding: 20, paddingTop: 48 },
+
+  header: { alignItems: 'center', marginBottom: 20 },
   logo: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: '#0f172a',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  sealImage: { width: 84, height: 84 },
+  brand: { fontSize: 34, fontWeight: '800', color: GREEN_DARK },
+  pesoName: { fontSize: 14, fontWeight: '700', color: '#0f172a', marginTop: 2 },
+  office: {
+    fontSize: 12,
+    color: '#475569',
+    textAlign: 'center',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 6,
+    backgroundColor: GREEN_DARK,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
     marginBottom: 12,
   },
-  title: { fontSize: 28, fontWeight: '700', color: '#0f172a' },
-  subtitle: { fontSize: 14, color: '#64748b', marginTop: 4 },
-  label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 8, marginTop: 16 },
+  badgeText: { color: '#ffffff', fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  welcome: { fontSize: 24, fontWeight: '800', color: GREEN_DARK, textAlign: 'center' },
+  welcomeSub: {
+    fontSize: 13,
+    color: '#64748b',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+
+  label: { fontSize: 13, fontWeight: '700', color: '#1f2937', marginBottom: 6, marginTop: 14 },
+
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 14,
-    height: 50,
-    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f8fafc',
+    borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
   },
-  input: { flex: 1, fontSize: 16, color: '#0f172a' },
+  input: { flex: 1, fontSize: 15, color: '#0f172a' },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 16,
-    padding: 12,
+    marginTop: 14,
+    padding: 10,
     borderRadius: 10,
     backgroundColor: '#fef2f2',
   },
-  errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
+  errorText: { flex: 1, color: '#b91c1c', fontSize: 13 },
+
   submit: {
-    marginTop: 24,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#0f172a',
+    marginTop: 18,
+    height: 50,
+    borderRadius: 10,
+    backgroundColor: GREEN_DARK,
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitDisabled: { opacity: 0.7 },
   submitText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
-  footer: {
+
+  backRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: 6,
-    marginTop: 24,
+    marginTop: 18,
   },
-  link: { color: '#1d4ed8', fontSize: 14, fontWeight: '700' },
+  link: { color: GREEN, fontSize: 13, fontWeight: '700' },
+
+  tagline: {
+    textAlign: 'center',
+    color: GREEN,
+    fontStyle: 'italic',
+    fontWeight: '600',
+    marginTop: 24,
+    marginBottom: 12,
+  },
 });
