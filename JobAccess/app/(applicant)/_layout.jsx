@@ -1,14 +1,21 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../src/constants/theme';
 
 export default function ApplicantLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: '#1d4ed8' }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textMuted,
+        tabBarStyle: { borderTopColor: COLORS.border },
+      }}
+    >
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
-          headerShown: false,
           tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
@@ -42,8 +49,8 @@ export default function ApplicantLayout() {
       />
 
       {/* Opened from other screens, so hidden from the tab bar */}
-      <Tabs.Screen name="job/[id]" options={{ href: null, headerShown: false }} />
-      <Tabs.Screen name="apply/[jobId]" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="job/[id]" options={{ href: null }} />
+      <Tabs.Screen name="apply/[jobId]" options={{ href: null }} />
     </Tabs>
   );
 }
