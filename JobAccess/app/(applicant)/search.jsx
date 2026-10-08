@@ -6,15 +6,19 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Keyboard,
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApprovedJobs } from '../../src/features/postings/usePostings';
 import JobCard from '../../src/components/JobCard';
+import { COLORS, RADIUS } from '../../src/constants/theme';
 
 const TYPES = ['All', 'Full-time', 'Part-time', 'Contract', 'Internship'];
 
 export default function SearchScreen() {
+  const insets = useSafeAreaInsets();
   const { data: jobs, loading, error } = useApprovedJobs();
   const [text, setText] = useState('');
   const [type, setType] = useState('All');
@@ -35,24 +39,38 @@ export default function SearchScreen() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.inputWrap}>
-        <Ionicons name="search-outline" size={20} color="#64748b" />
-        <TextInput
-          style={styles.input}
-          placeholder="Search jobs, companies, barangays"
-          placeholderTextColor="#94a3b8"
-          value={text}
-          onChangeText={setText}
-          autoCapitalize="none"
-        />
-        {!!text && (
-          <TouchableOpacity onPress={() => setText('')}>
-            <Ionicons name="close-circle" size={20} color="#94a3b8" />
-          </TouchableOpacity>
-        )}
+      <Text style={styles.heading}>Find Jobs</Text>
+
+      <View style={styles.searchRow}>
+        <View style={styles.inputWrap}>
+          <Ionicons name="search-outline" size={20} color={COLORS.textMuted} />
+          <TextInput
+            style={styles.input}
+            placeholder="Job title, keyword, barangay..."
+            placeholderTextColor="#9ca3af"
+            value={text}
+            onChangeText={setText}
+            autoCapitalize="none"
+            returnKeyType="search"
+            onSubmitEditing={() => Keyboard.dismiss()}
+          />
+          {!!text && (
+            <TouchableOpacity onPress={() => setText('')}>
+              <Ionicons name="close-circle" size={20} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <TouchableOpacity
+          style={styles.searchBtn}
+          onPress={() => Keyboard.dismiss()}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="search" size={18} color="#ffffff" />
+          <Text style={styles.searchBtnText}>Search</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -68,6 +86,7 @@ export default function SearchScreen() {
               key={t}
               style={[styles.chip, active && styles.chipActive]}
               onPress={() => setType(t)}
+              activeOpacity={0.8}
             >
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{t}</Text>
             </TouchableOpacity>
@@ -75,25 +94,27 @@ export default function SearchScreen() {
         })}
       </ScrollView>
 
-      {loading && <ActivityIndicator style={{ marginTop: 24 }} color="#1d4ed8" />}
+      {loading && <ActivityIndicator style={{ marginTop: 24 }} color={COLORS.primary} />}
 
       {!!error && (
         <View style={styles.errorBox}>
-          <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+          <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
       {!loading && !error && (
-        <Text style={styles.count}>
-          {results.length} job{results.length === 1 ? '' : 's'} found
-        </Text>
+        <View style={styles.countRow}>
+          <Text style={styles.count}>
+            {results.length} job{results.length === 1 ? '' : 's'} found
+          </Text>
+        </View>
       )}
 
       {!loading && !error && results.length === 0 && (
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="search-outline" size={32} color="#1d4ed8" />
+            <Ionicons name="search-outline" size={32} color={COLORS.primary} />
           </View>
           <Text style={styles.emptyTitle}>
             {jobs.length === 0 ? 'No job openings yet' : 'No matching jobs'}
@@ -114,54 +135,74 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8fafc' },
-  content: { padding: 20, paddingBottom: 40 },
+  screen: { flex: 1, backgroundColor: COLORS.bg },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
+  heading: { fontSize: 26, fontWeight: '800', color: COLORS.primaryDark, marginBottom: 16 },
+
+  searchRow: { flexDirection: 'row', gap: 10 },
   inputWrap: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     height: 50,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: COLORS.inputBorder,
   },
-  input: { flex: 1, fontSize: 16, color: '#0f172a' },
+  input: { flex: 1, fontSize: 15, color: COLORS.text },
+  searchBtn: {
+    height: 50,
+    paddingHorizontal: 16,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  searchBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
+
   chipScroll: { marginTop: 14, flexGrow: 0 },
   chipRow: { gap: 8 },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#ffffff',
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.surface,
   },
-  chipActive: { backgroundColor: '#1d4ed8', borderColor: '#1d4ed8' },
-  chipText: { fontSize: 13, fontWeight: '600', color: '#475569' },
+  chipActive: { backgroundColor: COLORS.primary },
+  chipText: { fontSize: 13, fontWeight: '600', color: COLORS.primary },
   chipTextActive: { color: '#ffffff' },
-  count: { fontSize: 13, color: '#64748b', marginTop: 16, marginBottom: 12 },
+
+  countRow: { marginTop: 18, marginBottom: 12 },
+  count: { fontSize: 13, fontWeight: '600', color: COLORS.textMuted },
+
   empty: { alignItems: 'center', paddingVertical: 40 },
   emptyIcon: {
     width: 64,
     height: 64,
     borderRadius: 18,
-    backgroundColor: '#eff6ff',
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#0f172a' },
-  emptyNote: { fontSize: 14, color: '#64748b', marginTop: 4, textAlign: 'center' },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text },
+  emptyNote: { fontSize: 14, color: COLORS.textMuted, marginTop: 4, textAlign: 'center' },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginTop: 16,
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#fef2f2',
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.dangerBg,
   },
-  errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
+  errorText: { flex: 1, color: COLORS.danger, fontSize: 14 },
 });
