@@ -5,6 +5,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  Platform,
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -13,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { useMyApplications } from '../../src/features/applications/useApplications';
 import { STATUS_LABELS } from '../../src/features/applications/statusMachine';
+import { withdrawApplication } from '../../src/features/auth/accountService';
 import StatusTimeline from '../../src/components/StatusTimeline';
 import { COLORS, RADIUS } from '../../src/constants/theme';
 
@@ -23,6 +26,7 @@ const STATUS_COLORS = {
   interview: { color: '#7e22ce', bg: '#f3e8ff' },
   hired: { color: COLORS.primary, bg: COLORS.primaryLight },
   not_selected: { color: COLORS.danger, bg: '#fee2e2' },
+  withdrawn: { color: COLORS.textMuted, bg: '#f1f5f9' },
 };
 
 const FILTERS = [
@@ -31,7 +35,12 @@ const FILTERS = [
   { key: 'under_review', label: 'Under Review' },
   { key: 'shortlisted', label: 'Shortlisted' },
   { key: 'interview', label: 'Interview' },
+  { key: 'hired', label: 'Hired' },
+  { key: 'withdrawn', label: 'Withdrawn' },
 ];
+
+// Statuses that can still be withdrawn (a rejected application cannot)
+const CAN_WITHDRAW = ['submitted', 'under_review', 'shortlisted', 'interview', 'hired'];
 
 function formatDate(ts) {
   if (!ts?.seconds) return '';
@@ -44,13 +53,48 @@ function formatDate(ts) {
 
 export default function ApplicationsScreen() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const { data: applications, loading, error } = useMyApplications(user?.uid);
   const [filter, setFilter] = useState('all');
+  const [busyId, setBusyId] = useState(null);
+  const [actionError, setActionError] = useState('');
 
   const visible =
     filter === 'all' ? applications : applications.filter((a) => a.status === filter);
+
+  const doWithdraw = async (app) => {
+    setActionError('');
+    setBusyId(app.id);
+    try {
+      await withdrawApplication(app, profile?.name);
+    } catch (e) {
+      setActionError(e.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmWithdraw = (app) => {
+    const isHired = app.status === 'hired';
+    const title = isHired ? 'Withdraw from this job?' : 'Withdraw application?';
+    const message = isHired
+      ? `You were hired for "${app.jobTitle}". Withdrawing will end this job and notify your employer.`
+      : `Your application for "${app.jobTitle}" will be withdrawn and your employer will be notified.`;
+
+    // Web browsers don't support Alert buttons, so use the built-in confirm box there
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${title}\n\n${message}`)) {
+        doWithdraw(app);
+      }
+      return;
+    }
+
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Withdraw', style: 'destructive', onPress: () => doWithdraw(app) },
+    ]);
+  };
 
   return (
     <View style={styles.screen}>
@@ -88,10 +132,10 @@ export default function ApplicationsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {loading && <ActivityIndicator style={{ marginTop: 24 }} color={COLORS.primary} />}
 
-        {!!error && (
+        {!!(error || actionError) && (
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>{error || actionError}</Text>
           </View>
         )}
 
@@ -121,6 +165,10 @@ export default function ApplicationsScreen() {
 
         {visible.map((app) => {
           const st = STATUS_COLORS[app.status] || STATUS_COLORS.submitted;
+          const label = STATUS_LABELS[app.status] || app.status;
+          const withdrawable = CAN_WITHDRAW.includes(app.status);
+          const busy = busyId === app.id;
+
           return (
             <View key={app.id} style={styles.card}>
               <View style={styles.cardTop}>
@@ -132,14 +180,35 @@ export default function ApplicationsScreen() {
                   )}
                 </View>
                 <View style={[styles.pill, { backgroundColor: st.bg }]}>
-                  <Text style={[styles.pillText, { color: st.color }]}>
-                    {STATUS_LABELS[app.status] || app.status}
-                  </Text>
+                  <Text style={[styles.pillText, { color: st.color }]}>{label}</Text>
                 </View>
               </View>
-              <View style={{ marginTop: 14 }}>
-                <StatusTimeline status={app.status} />
-              </View>
+
+              {app.status !== 'withdrawn' && (
+                <View style={{ marginTop: 14 }}>
+                  <StatusTimeline status={app.status} />
+                </View>
+              )}
+
+              {withdrawable && (
+                <TouchableOpacity
+                  style={[styles.withdrawBtn, busy && styles.disabled]}
+                  onPress={() => confirmWithdraw(app)}
+                  disabled={busy}
+                  activeOpacity={0.85}
+                >
+                  {busy ? (
+                    <ActivityIndicator color={COLORS.danger} />
+                  ) : (
+                    <>
+                      <Ionicons name="exit-outline" size={18} color={COLORS.danger} />
+                      <Text style={styles.withdrawText}>
+                        {app.status === 'hired' ? 'Withdraw from job' : 'Withdraw application'}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
           );
         })}
@@ -220,4 +289,19 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, color: '#9ca3af', marginTop: 4 },
   pill: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill },
   pillText: { fontSize: 12, fontWeight: '700' },
+
+  withdrawBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 14,
+    height: 44,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.dangerBg,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  withdrawText: { color: COLORS.danger, fontSize: 14, fontWeight: '700' },
+  disabled: { opacity: 0.6 },
 });
