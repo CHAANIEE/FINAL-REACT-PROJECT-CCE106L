@@ -14,6 +14,9 @@ import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ROLES } from '../../src/constants/roles';
 import { register } from '../../src/features/auth/authService';
+import { saveBusinessPermit } from '../../src/features/auth/permitService';
+import { pickDocument, uploadDocument } from '../../src/features/documents/documentService';
+import { auth } from '../../src/lib/firebase';
 
 const ROLE_OPTIONS = [
   { value: ROLES.APPLICANT, label: 'Job Seeker', icon: 'person-outline' },
@@ -26,10 +29,21 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [permit, setPermit] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const isEmployer = role === ROLES.EMPLOYER;
+
+  const choosePermit = async () => {
+    setError('');
+    try {
+      const asset = await pickDocument();
+      if (asset) setPermit(asset);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
 
   const handleRegister = async () => {
     setError('');
@@ -45,9 +59,22 @@ export default function RegisterScreen() {
       setError('Passwords do not match.');
       return;
     }
+    if (isEmployer && !permit) {
+      setError('Employers must upload a business permit to create an account.');
+      return;
+    }
+
     setLoading(true);
     try {
       await register({ name, email, password, role });
+
+      // Employers: save the permit and mark the account as pending PESO review
+      if (isEmployer) {
+        const uid = auth.currentUser?.uid;
+        if (!uid) throw new Error('Account was created but could not be verified. Please log in.');
+        const uploaded = await uploadDocument('permits', uid, permit);
+        await saveBusinessPermit(uid, uploaded);
+      }
       // Redirect is handled automatically in app/_layout.jsx
     } catch (e) {
       setError(e.message);
@@ -79,11 +106,7 @@ export default function RegisterScreen() {
                 onPress={() => setRole(opt.value)}
                 activeOpacity={0.8}
               >
-                <Ionicons
-                  name={opt.icon}
-                  size={20}
-                  color={active ? '#ffffff' : '#475569'}
-                />
+                <Ionicons name={opt.icon} size={20} color={active ? '#ffffff' : '#475569'} />
                 <Text style={[styles.roleText, active && styles.roleTextActive]}>
                   {opt.label}
                 </Text>
@@ -150,6 +173,37 @@ export default function RegisterScreen() {
           />
         </View>
 
+        {isEmployer && (
+          <>
+            <Text style={styles.label}>Business permit</Text>
+            <TouchableOpacity
+              style={[styles.permitBox, !!permit && styles.permitBoxDone]}
+              onPress={choosePermit}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={permit ? 'checkmark-circle' : 'cloud-upload-outline'}
+                size={22}
+                color={permit ? '#15803d' : '#1d4ed8'}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.permitTitle} numberOfLines={1}>
+                  {permit ? permit.name : 'Upload your business permit'}
+                </Text>
+                <Text style={styles.permitSub}>
+                  {permit
+                    ? 'Tap to choose a different file'
+                    : 'PDF, Word or image, under 500 KB. PESO reviews it before you can post.'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.note}>
+              Your account stays pending until PESO Tagum approves your business permit.
+            </Text>
+          </>
+        )}
+
         {!!error && (
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
@@ -166,7 +220,9 @@ export default function RegisterScreen() {
           {loading ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={styles.submitText}>Create Account</Text>
+            <Text style={styles.submitText}>
+              {isEmployer ? 'Submit for Verification' : 'Create Account'}
+            </Text>
           )}
         </TouchableOpacity>
 
@@ -215,6 +271,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   input: { flex: 1, fontSize: 16, color: '#0f172a' },
+  permitBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#93c5fd',
+    backgroundColor: '#eff6ff',
+  },
+  permitBoxDone: { borderStyle: 'solid', borderColor: '#86efac', backgroundColor: '#f0fdf4' },
+  permitTitle: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
+  permitSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  note: { fontSize: 12, color: '#64748b', marginTop: 8 },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
