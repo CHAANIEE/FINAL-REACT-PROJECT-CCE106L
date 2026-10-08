@@ -11,9 +11,11 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { logout } from '../../src/features/auth/authService';
 import { saveApplicantProfile } from '../../src/features/auth/profileService';
+import { COLORS, RADIUS } from '../../src/constants/theme';
 
 const EDUCATION = [
   'High School',
@@ -26,6 +28,7 @@ const EDUCATION = [
 const EMPTY = { phone: '', location: '', education: '', skills: '', desiredCategory: '' };
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const { user, profile } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const [loaded, setLoaded] = useState(false);
@@ -96,9 +99,20 @@ export default function ProfileScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Header */}
-        <View style={styles.header}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Top bar */}
+        <View style={styles.topBar}>
+          <Text style={styles.heading}>My Profile</Text>
+          <TouchableOpacity style={styles.iconBtn} onPress={logout} activeOpacity={0.8}>
+            <Ionicons name="log-out-outline" size={20} color={COLORS.primaryDark} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Identity card */}
+        <View style={styles.identity}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
@@ -112,6 +126,7 @@ export default function ProfileScreen() {
         <View style={styles.progressCard}>
           <View style={styles.progressTop}>
             <Text style={styles.progressTitle}>Profile {percent}% complete</Text>
+            <Text style={styles.progressPercent}>{percent}%</Text>
           </View>
           <View style={styles.track}>
             <View style={[styles.fill, { width: `${percent}%` }]} />
@@ -121,70 +136,74 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <Text style={styles.label}>Phone number</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. 0917 123 4567"
-          placeholderTextColor="#94a3b8"
-          keyboardType="phone-pad"
-          value={form.phone}
-          onChangeText={set('phone')}
-        />
+        {/* Form */}
+        <View style={styles.formCard}>
+          <Text style={styles.label}>Phone number</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 0917 123 4567"
+            placeholderTextColor="#9ca3af"
+            keyboardType="phone-pad"
+            value={form.phone}
+            onChangeText={set('phone')}
+          />
 
-        <Text style={styles.label}>Barangay (Tagum City)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Apokon"
-          placeholderTextColor="#94a3b8"
-          value={form.location}
-          onChangeText={set('location')}
-        />
+          <Text style={styles.label}>Barangay (Tagum City)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Apokon"
+            placeholderTextColor="#9ca3af"
+            value={form.location}
+            onChangeText={set('location')}
+          />
 
-        <Text style={styles.label}>Education</Text>
-        <View style={styles.chips}>
-          {EDUCATION.map((e) => {
-            const active = form.education === e;
-            return (
-              <TouchableOpacity
-                key={e}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => set('education')(e)}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{e}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          <Text style={styles.label}>Education</Text>
+          <View style={styles.chips}>
+            {EDUCATION.map((e) => {
+              const active = form.education === e;
+              return (
+                <TouchableOpacity
+                  key={e}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => set('education')(e)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{e}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={styles.label}>Skills (separate with commas)</Text>
+          <TextInput
+            style={[styles.input, styles.multiline]}
+            placeholder="e.g. Cashiering, Customer service, MS Excel"
+            placeholderTextColor="#9ca3af"
+            multiline
+            value={form.skills}
+            onChangeText={set('skills')}
+          />
+
+          <Text style={styles.label}>Desired job category</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Sales, Office work, Delivery"
+            placeholderTextColor="#9ca3af"
+            value={form.desiredCategory}
+            onChangeText={set('desiredCategory')}
+          />
         </View>
-
-        <Text style={styles.label}>Skills (separate with commas)</Text>
-        <TextInput
-          style={[styles.input, styles.multiline]}
-          placeholder="e.g. Cashiering, Customer service, MS Excel"
-          placeholderTextColor="#94a3b8"
-          multiline
-          value={form.skills}
-          onChangeText={set('skills')}
-        />
-
-        <Text style={styles.label}>Desired job category</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Sales, Office work, Delivery"
-          placeholderTextColor="#94a3b8"
-          value={form.desiredCategory}
-          onChangeText={set('desiredCategory')}
-        />
 
         {!!error && (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+            <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
 
         {saved && (
           <View style={styles.successBox}>
-            <Ionicons name="checkmark-circle-outline" size={18} color="#15803d" />
+            <Ionicons name="checkmark-circle-outline" size={18} color={COLORS.primary} />
             <Text style={styles.successText}>Profile saved.</Text>
           </View>
         )}
@@ -201,112 +220,143 @@ export default function ProfileScreen() {
             <Text style={styles.saveText}>Save Profile</Text>
           )}
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.logout} onPress={logout}>
-          <Ionicons name="log-out-outline" size={20} color="#b91c1c" />
-          <Text style={styles.logoutText}>Log out</Text>
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#ffffff' },
-  content: { padding: 20, paddingBottom: 48 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  flex: { flex: 1, backgroundColor: COLORS.bg },
+  content: { paddingHorizontal: 20, paddingBottom: 48 },
+
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  heading: { fontSize: 26, fontWeight: '800', color: COLORS.primaryDark },
+  iconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#1d4ed8',
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: { color: '#ffffff', fontSize: 22, fontWeight: '800' },
-  name: { fontSize: 20, fontWeight: '800', color: '#0f172a' },
-  email: { fontSize: 14, color: '#64748b', marginTop: 2 },
+  name: { fontSize: 18, fontWeight: '800', color: COLORS.text },
+  email: { fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+
   progressCard: {
-    marginTop: 20,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: '#eff6ff',
+    marginTop: 16,
+    padding: 16,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primaryLight,
   },
   progressTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  progressTitle: { fontSize: 14, fontWeight: '700', color: '#1d4ed8' },
+  progressTitle: { fontSize: 14, fontWeight: '700', color: COLORS.primaryDark },
+  progressPercent: { fontSize: 14, fontWeight: '800', color: COLORS.primary },
   track: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#dbeafe',
+    backgroundColor: COLORS.surface,
     marginTop: 10,
     overflow: 'hidden',
   },
-  fill: { height: 8, borderRadius: 4, backgroundColor: '#1d4ed8' },
-  progressNote: { fontSize: 12, color: '#475569', marginTop: 8 },
-  label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 8, marginTop: 18 },
+  fill: { height: 8, borderRadius: 4, backgroundColor: COLORS.primary },
+  progressNote: { fontSize: 12, color: COLORS.textBody, marginTop: 8 },
+
+  formCard: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 6,
+    marginTop: 14,
+  },
   input: {
-    minHeight: 50,
+    minHeight: 48,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f8fafc',
-    fontSize: 16,
-    color: '#0f172a',
+    borderColor: COLORS.inputBorder,
+    backgroundColor: COLORS.surface,
+    fontSize: 15,
+    color: COLORS.text,
   },
   multiline: { minHeight: 90, textAlignVertical: 'top' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 999,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f8fafc',
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.surface,
   },
-  chipActive: { backgroundColor: '#1d4ed8', borderColor: '#1d4ed8' },
-  chipText: { fontSize: 13, fontWeight: '600', color: '#475569' },
+  chipActive: { backgroundColor: COLORS.primary },
+  chipText: { fontSize: 13, fontWeight: '600', color: COLORS.primary },
   chipTextActive: { color: '#ffffff' },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginTop: 16,
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#fef2f2',
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.dangerBg,
   },
-  errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
+  errorText: { flex: 1, color: COLORS.danger, fontSize: 14 },
   successBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginTop: 16,
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.primarySoft,
   },
-  successText: { color: '#15803d', fontSize: 14, fontWeight: '600' },
+  successText: { color: COLORS.primary, fontSize: 14, fontWeight: '600' },
+
   save: {
-    marginTop: 24,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#1d4ed8',
+    marginTop: 20,
+    height: 50,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   saveDisabled: { opacity: 0.7 },
   saveText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
-  logout: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 14,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#fef2f2',
-  },
-  logoutText: { color: '#b91c1c', fontSize: 15, fontWeight: '700' },
 });
