@@ -12,12 +12,15 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/features/auth/AuthProvider';
 import { useJob } from '../../../src/features/postings/useJob';
 import { useMyApplications } from '../../../src/features/applications/useApplications';
 import { createApplication } from '../../../src/features/applications/applicationService';
+import { COLORS, RADIUS } from '../../../src/constants/theme';
 
 export default function ApplyScreen() {
+  const insets = useSafeAreaInsets();
   const { jobId: param } = useLocalSearchParams();
   const jobId = Array.isArray(param) ? param[0] : param;
   const router = useRouter();
@@ -56,19 +59,27 @@ export default function ApplyScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity style={styles.back} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableOpacity
+          style={styles.back}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={20} color={COLORS.text} />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
 
-        <Text style={styles.heading}>Apply for this job</Text>
+        <Text style={styles.heading}>Apply for Job</Text>
 
-        {loading && <ActivityIndicator style={{ marginTop: 40 }} color="#1d4ed8" />}
+        {loading && <ActivityIndicator style={{ marginTop: 40 }} color={COLORS.primary} />}
 
         {!!error && (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+            <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
@@ -79,20 +90,48 @@ export default function ApplyScreen() {
 
         {!!job && (
           <>
+            {/* Job summary */}
             <View style={styles.jobCard}>
-              <Text style={styles.jobTitle}>{job.title}</Text>
-              <Text style={styles.jobCompany}>{job.company}</Text>
-              <Text style={styles.jobMeta}>{job.location} · {job.type}</Text>
+              <View style={styles.jobIcon}>
+                <Ionicons name="briefcase" size={22} color={COLORS.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.jobTitle} numberOfLines={2}>{job.title}</Text>
+                <Text style={styles.jobCompany} numberOfLines={1}>{job.company}</Text>
+                <View style={styles.jobTags}>
+                  <View style={styles.tag}>
+                    <Ionicons name="location-outline" size={13} color={COLORS.textBody} />
+                    <Text style={styles.tagText}>{job.location}</Text>
+                  </View>
+                  <View style={styles.tag}>
+                    <Ionicons name="time-outline" size={13} color={COLORS.textBody} />
+                    <Text style={styles.tagText}>{job.type}</Text>
+                  </View>
+                </View>
+              </View>
             </View>
 
-            <Text style={styles.label}>Applying as</Text>
-            <View style={styles.profileCard}>
-              <Text style={styles.profileName}>{profile?.name}</Text>
-              <Text style={styles.profileLine}>{user?.email}</Text>
-              {!!profile?.phone && <Text style={styles.profileLine}>{profile.phone}</Text>}
-              {!!profile?.location && <Text style={styles.profileLine}>{profile.location}</Text>}
+            {/* Applicant details */}
+            <Text style={styles.sectionLabel}>Applying as</Text>
+            <View style={styles.card}>
+              <View style={styles.profileRow}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {(profile?.name || '?').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.profileName}>{profile?.name}</Text>
+                  <Text style={styles.profileLine}>{user?.email}</Text>
+                </View>
+              </View>
+
+              {!!profile?.phone && <Text style={styles.detail}>Phone: {profile.phone}</Text>}
+              {!!profile?.location && (
+                <Text style={styles.detail}>Barangay: {profile.location}</Text>
+              )}
               {!!(profile?.skills || []).length && (
-                <Text style={styles.profileLine}>Skills: {profile.skills.join(', ')}</Text>
+                <Text style={styles.detail}>Skills: {profile.skills.join(', ')}</Text>
               )}
             </View>
 
@@ -100,6 +139,7 @@ export default function ApplyScreen() {
               <TouchableOpacity
                 style={styles.warnBox}
                 onPress={() => router.push('/(applicant)/profile')}
+                activeOpacity={0.85}
               >
                 <Ionicons name="information-circle-outline" size={18} color="#b45309" />
                 <Text style={styles.warnText}>
@@ -111,12 +151,14 @@ export default function ApplyScreen() {
 
             {done ? (
               <View style={styles.successBox}>
-                <Ionicons name="checkmark-circle-outline" size={20} color="#15803d" />
+                <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.primary} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.successText}>
                     Application sent. PESO staff will review it.
                   </Text>
-                  <TouchableOpacity onPress={() => router.replace('/(applicant)/applications')}>
+                  <TouchableOpacity
+                    onPress={() => router.replace('/(applicant)/applications')}
+                  >
                     <Text style={styles.successLink}>View my applications</Text>
                   </TouchableOpacity>
                 </View>
@@ -128,11 +170,11 @@ export default function ApplyScreen() {
               </View>
             ) : (
               <>
-                <Text style={styles.label}>Message to the employer (optional)</Text>
+                <Text style={styles.sectionLabel}>Message to the employer (optional)</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Tell them why you are a good fit"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor="#9ca3af"
                   multiline
                   value={note}
                   onChangeText={setNote}
@@ -140,7 +182,7 @@ export default function ApplyScreen() {
 
                 {!!submitError && (
                   <View style={styles.errorBox}>
-                    <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+                    <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
                     <Text style={styles.errorText}>{submitError}</Text>
                   </View>
                 )}
@@ -154,7 +196,10 @@ export default function ApplyScreen() {
                   {submitting ? (
                     <ActivityIndicator color="#ffffff" />
                   ) : (
-                    <Text style={styles.submitText}>Submit Application</Text>
+                    <>
+                      <Ionicons name="paper-plane-outline" size={18} color="#ffffff" />
+                      <Text style={styles.submitText}>Submit Application</Text>
+                    </>
                   )}
                 </TouchableOpacity>
               </>
@@ -167,80 +212,133 @@ export default function ApplyScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#ffffff' },
-  content: { padding: 20, paddingTop: 56, paddingBottom: 40 },
-  back: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20 },
-  backText: { fontSize: 16, fontWeight: '600', color: '#0f172a' },
-  heading: { fontSize: 24, fontWeight: '800', color: '#0f172a' },
-  muted: { fontSize: 16, color: '#64748b', marginTop: 40, textAlign: 'center' },
+  flex: { flex: 1, backgroundColor: COLORS.bg },
+  screen: { flex: 1, backgroundColor: COLORS.bg },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
+
+  back: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
+  backText: { fontSize: 15, fontWeight: '700', color: COLORS.text },
+  heading: { fontSize: 26, fontWeight: '800', color: COLORS.primaryDark },
+  muted: { fontSize: 15, color: COLORS.textMuted, marginTop: 40, textAlign: 'center' },
+
   jobCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
     marginTop: 16,
     padding: 16,
-    borderRadius: 14,
-    backgroundColor: '#eff6ff',
-  },
-  jobTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a' },
-  jobCompany: { fontSize: 14, color: '#475569', marginTop: 2 },
-  jobMeta: { fontSize: 13, color: '#64748b', marginTop: 6 },
-  label: { fontSize: 14, fontWeight: '600', color: '#334155', marginBottom: 8, marginTop: 20 },
-  profileCard: {
-    padding: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    borderColor: COLORS.border,
   },
-  profileName: { fontSize: 16, fontWeight: '700', color: '#0f172a' },
-  profileLine: { fontSize: 14, color: '#475569', marginTop: 2 },
+  jobIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jobTitle: { fontSize: 17, fontWeight: '800', color: COLORS.text },
+  jobCompany: { fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+  jobTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.bg,
+  },
+  tagText: { fontSize: 12, color: COLORS.textBody },
+
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  card: {
+    padding: 16,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  profileRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { color: '#ffffff', fontSize: 18, fontWeight: '800' },
+  profileName: { fontSize: 16, fontWeight: '700', color: COLORS.text },
+  profileLine: { fontSize: 13, color: COLORS.textMuted, marginTop: 2 },
+  detail: { fontSize: 13, color: COLORS.textBody, marginTop: 6 },
+
   warnBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    marginTop: 16,
+    marginTop: 14,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: RADIUS.sm,
     backgroundColor: '#fffbeb',
   },
-  warnText: { flex: 1, color: '#b45309', fontSize: 14, lineHeight: 20 },
+  warnText: { flex: 1, color: '#b45309', fontSize: 13, lineHeight: 19 },
+
   input: {
-    minHeight: 100,
+    minHeight: 110,
     padding: 14,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f8fafc',
-    fontSize: 16,
-    color: '#0f172a',
+    borderColor: COLORS.inputBorder,
+    backgroundColor: COLORS.surface,
+    fontSize: 15,
+    color: COLORS.text,
     textAlignVertical: 'top',
   },
+
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 16,
+    marginTop: 14,
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#fef2f2',
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.dangerBg,
   },
-  errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
+  errorText: { flex: 1, color: COLORS.danger, fontSize: 14 },
+
   successBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 10,
     marginTop: 20,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#f0fdf4',
+    padding: 14,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primarySoft,
+    borderWidth: 1,
+    borderColor: COLORS.primaryLight,
   },
-  successText: { color: '#15803d', fontSize: 14 },
-  successLink: { color: '#1d4ed8', fontSize: 14, fontWeight: '700', marginTop: 4 },
+  successText: { color: COLORS.primary, fontSize: 14, fontWeight: '600' },
+  successLink: { color: COLORS.primary, fontSize: 14, fontWeight: '800', marginTop: 6 },
+
   submit: {
-    marginTop: 24,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#1d4ed8',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    marginTop: 24,
+    height: 50,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primary,
   },
   submitDisabled: { opacity: 0.7 },
   submitText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
