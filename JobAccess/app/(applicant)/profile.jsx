@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Linking,
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { logout } from '../../src/features/auth/authService';
 import { saveApplicantProfile } from '../../src/features/auth/profileService';
+import { deleteMyAccount } from '../../src/features/auth/accountService';
 import { COLORS, RADIUS } from '../../src/constants/theme';
 
 const EDUCATION = [
@@ -27,12 +30,17 @@ const EDUCATION = [
 
 const EMPTY = { phone: '', location: '', education: '', skills: '', desiredCategory: '' };
 
+const DELETE_TITLE = 'Delete account?';
+const DELETE_MESSAGE =
+  'Your active applications, including any hire, will be withdrawn and your employer will be notified. This cannot be undone.';
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, profile } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -92,6 +100,37 @@ export default function ProfileScreen() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const doDelete = async () => {
+    setError('');
+    setDeleting(true);
+    try {
+      await deleteMyAccount(user.uid, profile?.name);
+      // On success the auth listener signs the user out and returns them to login
+    } catch (e) {
+      setError(
+        e.code === 'auth/requires-recent-login'
+          ? 'For security, log out, log in again, then delete your account.'
+          : e.message || 'Could not delete the account. Please try again.'
+      );
+      setDeleting(false);
+    }
+  };
+
+  const confirmDelete = () => {
+    // Web browsers don't support Alert buttons, so use the built-in confirm box there
+    if (Platform.OS === 'web') {
+      if (window.confirm(`${DELETE_TITLE}\n\n${DELETE_MESSAGE}`)) {
+        doDelete();
+      }
+      return;
+    }
+
+    Alert.alert(DELETE_TITLE, DELETE_MESSAGE, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: doDelete },
+    ]);
   };
 
   return (
@@ -211,13 +250,29 @@ export default function ProfileScreen() {
         <TouchableOpacity
           style={[styles.save, saving && styles.saveDisabled]}
           onPress={save}
-          disabled={saving}
+          disabled={saving || deleting}
           activeOpacity={0.85}
         >
           {saving ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
             <Text style={styles.saveText}>Save Profile</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.deleteBtn, deleting && styles.saveDisabled]}
+          onPress={confirmDelete}
+          disabled={saving || deleting}
+          activeOpacity={0.85}
+        >
+          {deleting ? (
+            <ActivityIndicator color={COLORS.danger} />
+          ) : (
+            <>
+              <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+              <Text style={styles.deleteText}>Delete account</Text>
+            </>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -359,4 +414,18 @@ const styles = StyleSheet.create({
   },
   saveDisabled: { opacity: 0.7 },
   saveText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 16,
+    height: 48,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.dangerBg,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  deleteText: { color: COLORS.danger, fontSize: 15, fontWeight: '700' },
 });
