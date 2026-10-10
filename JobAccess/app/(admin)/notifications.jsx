@@ -47,7 +47,7 @@ export default function AdminAlerts() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[styles.content, { paddingTop: 16 }]}
     >
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>

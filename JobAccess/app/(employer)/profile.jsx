@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
-import { logout } from '../../src/features/auth/authService';
+import { confirmLogout } from '../../src/utils/confirmLogout';
 import {
   saveEmployerProfile,
   deleteEmployerAccount,
@@ -137,16 +137,18 @@ export default function EmployerProfile() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+        contentContainerStyle={[styles.content, { paddingTop: 16 }]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        nestedScrollEnabled
       >
         {/* Top bar */}
         <View style={styles.topBar}>
           <Text style={styles.heading}>Company Profile</Text>
-          <TouchableOpacity style={styles.iconBtn} onPress={logout} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.iconBtn} onPress={confirmLogout} activeOpacity={0.8}>
             <Ionicons name="log-out-outline" size={20} color={COLORS.primaryDark} />
           </TouchableOpacity>
         </View>

@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
-import { logout } from '../../src/features/auth/authService';
+import { confirmLogout } from '../../src/utils/confirmLogout';
 import { COLORS, RADIUS } from '../../src/constants/theme';
 
 export default function AdminDashboard() {
@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   const { profile } = useAuth();
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 16 }]}>
+    <View style={[styles.screen, { paddingTop: 16 }]}>
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <View style={styles.badge}>
@@ -23,7 +23,7 @@ export default function AdminDashboard() {
           <Text style={styles.sub}>PESO Admin dashboard</Text>
         </View>
 
-        <TouchableOpacity style={styles.iconBtn} onPress={logout} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.iconBtn} onPress={confirmLogout} activeOpacity={0.8}>
           <Ionicons name="log-out-outline" size={20} color={COLORS.primaryDark} />
         </TouchableOpacity>
       </View>

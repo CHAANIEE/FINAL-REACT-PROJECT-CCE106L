@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '../../src/utils/useKeyboardHeight';
 import { useApprovedJobs } from '../../src/features/postings/usePostings';
 import JobCard from '../../src/components/JobCard';
 import { COLORS, RADIUS } from '../../src/constants/theme';
@@ -19,6 +20,7 @@ const TYPES = ['All', 'Full-time', 'Part-time', 'Contract', 'Internship'];
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const { data: jobs, loading, error } = useApprovedJobs();
   const [text, setText] = useState('');
   const [type, setType] = useState('All');
@@ -39,8 +41,12 @@ export default function SearchScreen() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: 16, paddingBottom: 40 + keyboardHeight },
+      ]}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="none"
     >
       <Text style={styles.heading}>Find Jobs</Text>
 

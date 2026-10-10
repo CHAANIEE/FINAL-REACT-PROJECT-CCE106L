@@ -36,7 +36,7 @@ export default function UnderReview() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[styles.content, { paddingTop: 16 }]}
     >
       <View style={styles.header}>
         <Text style={styles.heading}>Under Review</Text>

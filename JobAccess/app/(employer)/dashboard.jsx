@@ -10,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
-import { logout } from '../../src/features/auth/authService';
+import { confirmLogout } from '../../src/utils/confirmLogout';
 import { useEmployerPostings } from '../../src/features/postings/usePostings';
 import { useEmployerApplications } from '../../src/features/applications/useEmployerApplications';
 import { useUserNotifications } from '../../src/features/notifications/useNotifications';
@@ -63,7 +63,7 @@ export default function EmployerDashboard() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[styles.content, { paddingTop: 16 }]}
     >
       {/* Header */}
       <View style={styles.header}>
@@ -76,19 +76,7 @@ export default function EmployerDashboard() {
         </View>
 
         <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.push('/(employer)/notifications')}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="notifications-outline" size={20} color={COLORS.primaryDark} />
-            {unread > 0 && (
-              <View style={styles.bellBadge}>
-                <Text style={styles.bellBadgeText}>{unread > 9 ? '9+' : unread}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={logout} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.iconBtn} onPress={confirmLogout} activeOpacity={0.8}>
             <Ionicons name="log-out-outline" size={20} color={COLORS.primaryDark} />
           </TouchableOpacity>
         </View>
@@ -175,6 +163,9 @@ export default function EmployerDashboard() {
                   ? `${applicantCount(p.id)} applicant(s)`
                   : `${p.type} · ${p.location}`}
               </Text>
+              {!!p.description && (
+                <Text style={styles.postingDesc} numberOfLines={2}>{p.description}</Text>
+              )}
             </View>
             <View style={[styles.statusPill, { backgroundColor: st.bg }]}>
               <Text style={[styles.statusText, { color: st.color }]}>{st.label}</Text>
@@ -190,6 +181,7 @@ export default function EmployerDashboard() {
 }
 
 const styles = StyleSheet.create({
+  postingDesc: { fontSize: 12, color: COLORS.textMuted, marginTop: 4, lineHeight: 17 },
   screen: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingHorizontal: 20, paddingBottom: 32 },
 

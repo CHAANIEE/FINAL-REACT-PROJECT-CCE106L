@@ -42,7 +42,7 @@ export default function MyPostings() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[styles.content, { paddingTop: 16 }]}
     >
       <Text style={styles.heading}>My Postings</Text>
       <Text style={styles.subheading}>
@@ -127,6 +127,10 @@ export default function MyPostings() {
               </View>
             </View>
 
+            {!!p.description && (
+              <Text style={styles.description} numberOfLines={3}>{p.description}</Text>
+            )}
+
             {isLive && !p.reviewed && (
               <Text style={styles.hint}>Live. PESO has not reviewed this vacancy yet.</Text>
             )}
@@ -157,6 +161,7 @@ export default function MyPostings() {
 }
 
 const styles = StyleSheet.create({
+  description: { fontSize: 13, color: COLORS.textBody, marginTop: 10, lineHeight: 19 },
   screen: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   heading: { fontSize: 26, fontWeight: '800', color: COLORS.primaryDark },

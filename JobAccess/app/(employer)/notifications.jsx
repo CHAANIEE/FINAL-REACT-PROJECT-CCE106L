@@ -12,7 +12,7 @@ export default function EmployerAlerts() {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+      <View style={[styles.header, { paddingTop: 16 }]}>
         <Text style={styles.heading}>Notifications</Text>
         <Text style={styles.subheading}>Updates on your vacancies and applicants</Text>
       </View>

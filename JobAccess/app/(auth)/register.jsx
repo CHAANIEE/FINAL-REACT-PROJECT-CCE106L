@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ROLES } from '../../src/constants/roles';
 import { register } from '../../src/features/auth/authService';
 import { saveBusinessPermit } from '../../src/features/auth/permitService';
@@ -24,6 +25,7 @@ const ROLE_OPTIONS = [
 ];
 
 export default function RegisterScreen() {
+  const insets = useSafeAreaInsets();
   const [role, setRole] = useState(ROLES.APPLICANT);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -86,11 +88,13 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        nestedScrollEnabled
       >
         <Text style={styles.title}>Create account</Text>
         <Text style={styles.subtitle}>Join JobAccess PESO Tagum</Text>
@@ -204,13 +208,21 @@ export default function RegisterScreen() {
           </>
         )}
 
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Already have an account? </Text>
+          <Link href="/(auth)/login" style={styles.link}>
+            Log in
+          </Link>
+        </View>
+      </ScrollView>
+      <View style={[styles.footerBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         {!!error && (
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
-
+        
         <TouchableOpacity
           style={[styles.submit, loading && styles.submitDisabled]}
           onPress={handleRegister}
@@ -225,19 +237,19 @@ export default function RegisterScreen() {
             </Text>
           )}
         </TouchableOpacity>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <Link href="/(auth)/login" style={styles.link}>
-            Log in
-          </Link>
-        </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  footerBar: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
   flex: { flex: 1, backgroundColor: '#ffffff' },
   container: { flexGrow: 1, padding: 24, justifyContent: 'center' },
   title: { fontSize: 28, fontWeight: '700', color: '#0f172a' },
@@ -290,14 +302,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 16,
+    marginTop: 0,
+    marginBottom: 10,
     padding: 12,
     borderRadius: 10,
     backgroundColor: '#fef2f2',
   },
   errorText: { flex: 1, color: '#b91c1c', fontSize: 14 },
   submit: {
-    marginTop: 24,
+    marginTop: 0,
     height: 52,
     borderRadius: 12,
     backgroundColor: '#1d4ed8',

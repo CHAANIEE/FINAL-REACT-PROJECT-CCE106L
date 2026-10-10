@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { useUserNotifications } from '../../src/features/notifications/useNotifications';
+import TopBar from '../../src/components/TopBar';
 import { COLORS } from '../../src/constants/theme';
 
 function TabIcon({ name, focused, color, size }) {
@@ -21,8 +22,10 @@ export default function ApplicantLayout() {
 
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        header: (props) => <TopBar {...props} unreadCount={unreadCount} />,
         tabBarShowLabel: false,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
@@ -63,14 +66,6 @@ export default function ApplicantLayout() {
         }}
       />
       <Tabs.Screen
-        name="notifications"
-        options={{
-          title: 'Alerts',
-          tabBarIcon: (props) => <TabIcon name="notifications" {...props} />,
-          tabBarBadge: unreadCount > 0 ? (unreadCount > 9 ? '9+' : unreadCount) : undefined,
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
@@ -79,8 +74,10 @@ export default function ApplicantLayout() {
       />
 
       {/* Opened from other screens, so hidden from the tab bar */}
-      <Tabs.Screen name="job/[id]" options={{ href: null }} />
-      <Tabs.Screen name="apply/[jobId]" options={{ href: null }} />
+      <Tabs.Screen name="job/[id]" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="apply/[jobId]" options={{ href: null, headerShown: false }} />
+      {/* Opened from the bell in the top bar, so hidden from the bottom tab bar */}
+      <Tabs.Screen name="notifications" options={{ href: null, title: 'Notifications' }} />
     </Tabs>
   );
 }

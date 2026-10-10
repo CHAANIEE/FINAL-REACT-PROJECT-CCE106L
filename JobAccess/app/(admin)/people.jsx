@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '../../src/utils/useKeyboardHeight';
 import { listenPeopleByRole } from '../../src/features/admin/peopleService';
 import { COLORS, RADIUS } from '../../src/constants/theme';
 
@@ -21,6 +22,7 @@ const TABS = [
 
 export default function PeopleScreen() {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const router = useRouter();
   const [role, setRole] = useState('applicant');
   const [people, setPeople] = useState([]);
@@ -56,7 +58,12 @@ export default function PeopleScreen() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: 16, paddingBottom: 40 + keyboardHeight },
+      ]}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="none"
     >
       <View style={styles.header}>
         <Text style={styles.heading}>People</Text>

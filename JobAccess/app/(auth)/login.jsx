@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ROLES } from '../../src/constants/roles';
 import { login } from '../../src/features/auth/authService';
 
@@ -26,6 +27,7 @@ const ROLE_OPTIONS = [
 ];
 
 export default function LoginScreen() {
+  const insets = useSafeAreaInsets();
   const [role, setRole] = useState(ROLES.APPLICANT);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,11 +56,13 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
     >
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        nestedScrollEnabled
       >
         {/* Header */}
         <View style={styles.header}>
@@ -161,27 +165,6 @@ export default function LoginScreen() {
             <Text style={styles.forgot}>Forgot password?</Text>
           </View>
 
-          {!!error && (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          {/* Login button */}
-          <TouchableOpacity
-            style={[styles.submit, loading && styles.submitDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.submitText}>Log In  →</Text>
-            )}
-          </TouchableOpacity>
-
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
@@ -204,22 +187,44 @@ export default function LoginScreen() {
             </Link>
           </View>
 
-          <View style={styles.footer}>
-            <Ionicons name="shield-checkmark-outline" size={14} color="#6b7280" />
-            <Text style={styles.footerText}> PESO staff? </Text>
-            <Link href="/(auth)/admin-login" style={styles.link}>
-              Admin login
-            </Link>
-          </View>
         </View>
 
         <Text style={styles.tagline}>Trabaho para sa Mas Maunlad na Tagum!</Text>
       </ScrollView>
+      <View style={[styles.footerBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        {!!error && (
+          <View style={styles.errorBox}>
+            <Ionicons name="alert-circle-outline" size={18} color="#b91c1c" />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+        
+        {/* Login button */}
+        <TouchableOpacity
+          style={[styles.submit, loading && styles.submitDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+          activeOpacity={0.85}
+        >
+          {loading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.submitText}>Log In  →</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  footerBar: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    backgroundColor: '#f0fdf4',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
   flex: { flex: 1, backgroundColor: '#f0fdf4' },
   container: { flexGrow: 1, padding: 20, paddingTop: 48 },
 
@@ -312,7 +317,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 14,
+    marginTop: 0,
+    marginBottom: 10,
     padding: 10,
     borderRadius: 10,
     backgroundColor: '#fef2f2',
@@ -320,7 +326,7 @@ const styles = StyleSheet.create({
   errorText: { flex: 1, color: '#b91c1c', fontSize: 13 },
 
   submit: {
-    marginTop: 18,
+    marginTop: 0,
     height: 50,
     borderRadius: 10,
     backgroundColor: GREEN,

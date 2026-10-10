@@ -68,7 +68,7 @@ export default function Pipeline() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[styles.content, { paddingTop: 16 }]}
     >
       <Text style={styles.heading}>Applicant Pipeline</Text>
       <Text style={styles.sub}>Review applications and move them through each stage.</Text>

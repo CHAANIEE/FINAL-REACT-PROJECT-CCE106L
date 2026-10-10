@@ -38,12 +38,17 @@ export default function JobCard({ job, onPress }) {
         <Meta icon="time-outline" text={job.type} />
       </View>
 
+      {!!job.description && (
+        <Text style={styles.description} numberOfLines={2}>{job.description}</Text>
+      )}
+
       <Text style={styles.salary}>{job.salary}</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  description: { fontSize: 13, color: COLORS.textBody, marginTop: 10, lineHeight: 19 },
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.lg,

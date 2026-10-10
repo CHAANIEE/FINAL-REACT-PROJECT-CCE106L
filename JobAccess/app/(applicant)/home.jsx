@@ -10,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
-import { logout } from '../../src/features/auth/authService';
+import { confirmLogout } from '../../src/utils/confirmLogout';
 import { useApprovedJobs } from '../../src/features/postings/usePostings';
 import { useMyApplications } from '../../src/features/applications/useApplications';
 import JobCard from '../../src/components/JobCard';
@@ -58,13 +58,13 @@ export default function ApplicantHome() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       {/* Green header card with greeting and search */}
-      <View style={[styles.hero, { paddingTop: insets.top + 16 }]}>
+      <View style={[styles.hero, { paddingTop: 16 }]}>
         <View style={styles.heroTop}>
           <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>{getGreeting()}</Text>
             <Text style={styles.name}>{firstName}</Text>
           </View>
-          <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={confirmLogout} activeOpacity={0.8}>
             <Ionicons name="log-out-outline" size={20} color={COLORS.primaryDark} />
           </TouchableOpacity>
         </View>

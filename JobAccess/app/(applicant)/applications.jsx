@@ -98,7 +98,7 @@ export default function ApplicationsScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+      <View style={[styles.header, { paddingTop: 16 }]}>
         <Text style={styles.heading}>My Applications</Text>
         <Text style={styles.subheading}>
           {applications.length} application{applications.length === 1 ? '' : 's'} total
