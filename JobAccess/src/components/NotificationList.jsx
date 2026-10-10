@@ -17,6 +17,8 @@ const TYPE_ICON = {
   vacancy_approved: { name: 'checkmark-circle-outline', color: '#15803d', bg: '#dcfce7' },
   vacancy_rejected: { name: 'close-circle-outline', color: '#b91c1c', bg: '#fee2e2' },
   vacancy_submitted: { name: 'document-text-outline', color: '#1d4ed8', bg: '#dbeafe' },
+  vacancy_removed: { name: 'close-circle-outline', color: '#b91c1c', bg: '#fee2e2' },
+  verification_result: { name: 'shield-checkmark-outline', color: '#15803d', bg: '#dcfce7' },
   application_submitted: { name: 'person-add-outline', color: '#15803d', bg: '#dcfce7' },
 };
 const DEFAULT_ICON = { name: 'notifications-outline', color: '#475569', bg: '#e2e8f0' };

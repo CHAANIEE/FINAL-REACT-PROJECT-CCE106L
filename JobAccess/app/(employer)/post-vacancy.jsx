@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { createPosting } from '../../src/features/postings/postingService';
+import { formatPesoInput } from '../../src/utils/formatPeso';
+// import { withTagumCity } from '../../src/utils/tagum';
 import { COLORS, RADIUS } from '../../src/constants/theme';
 
 const TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
@@ -60,7 +62,7 @@ export default function PostVacancy() {
         company: profile?.name || 'Employer',
         title: form.title.trim(),
         type: form.type,
-        location: form.location.trim(),
+        location: withTagumCity(form.location),
         salary: form.salary.trim(),
         description: form.description.trim(),
         requirements: form.requirements.trim(),
@@ -128,6 +130,7 @@ export default function PostVacancy() {
             placeholderTextColor="#9ca3af"
             value={form.location}
             onChangeText={set('location')}
+            onBlur={() => set('location')(withTagumCity(form.location))}
           />
 
           <Text style={styles.label}>Salary</Text>
@@ -136,7 +139,7 @@ export default function PostVacancy() {
             placeholder="e.g. ₱14,000 - ₱16,000 / month"
             placeholderTextColor="#9ca3af"
             value={form.salary}
-            onChangeText={set('salary')}
+            onChangeText={(t) => set('salary')(formatPesoInput(t))}
           />
 
           <Text style={styles.label}>Description</Text>

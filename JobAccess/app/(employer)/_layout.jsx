@@ -27,6 +27,7 @@ export default function EmployerLayout() {
         headerShown: true,
         header: (props) => <TopBar {...props} unreadCount={unreadCount} />,
         tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textMuted,
         tabBarStyle: {
@@ -75,6 +76,7 @@ export default function EmployerLayout() {
 
       {/* Opened from a posting, so hidden from the tab bar */}
       <Tabs.Screen name="applicants/[postingId]" options={{ href: null, headerShown: false }} />
+      <Tabs.Screen name="posting/[id]" options={{ href: null, headerShown: false }} />
       {/* Opened from the bell in the top bar, so hidden from the bottom tab bar */}
       <Tabs.Screen name="notifications" options={{ href: null, title: 'Notifications' }} />
     </Tabs>

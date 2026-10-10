@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/features/auth/AuthProvider';
 import { confirmLogout } from '../../src/utils/confirmLogout';
+// import { withTagumCity } from '../../src/utils/tagum';
 import {
   saveEmployerProfile,
   deleteEmployerAccount,
@@ -91,7 +92,7 @@ export default function EmployerProfile() {
       await saveEmployerProfile(user.uid, {
         companyName: form.companyName.trim(),
         phone: form.phone.trim(),
-        address: form.address.trim(),
+        address: withTagumCity(form.address),
         industry: form.industry,
         about: form.about.trim(),
       });
@@ -208,6 +209,7 @@ export default function EmployerProfile() {
             placeholderTextColor="#9ca3af"
             value={form.address}
             onChangeText={set('address')}
+            onBlur={() => set('address')(withTagumCity(form.address))}
           />
 
           <Text style={styles.label}>Industry</Text>
@@ -238,33 +240,6 @@ export default function EmployerProfile() {
           />
         </View>
 
-        {!!error && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        {saved && (
-          <View style={styles.successBox}>
-            <Ionicons name="checkmark-circle-outline" size={18} color={COLORS.primary} />
-            <Text style={styles.successText}>Company profile saved.</Text>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[styles.save, saving && styles.disabled]}
-          onPress={save}
-          disabled={saving || deleting}
-          activeOpacity={0.85}
-        >
-          {saving ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.saveText}>Save Company Profile</Text>
-          )}
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={[styles.deleteBtn, deleting && styles.disabled]}
           onPress={confirmDelete}
@@ -281,11 +256,49 @@ export default function EmployerProfile() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      {/* Pinned so it stays visible above the keyboard */}
+      <View style={[styles.footerBar, { paddingBottom: 12 }]}>
+        {!!error && (
+          <View style={[styles.errorBox, styles.footerGap]}>
+            <Ionicons name="alert-circle-outline" size={18} color={COLORS.danger} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        {saved && (
+          <View style={[styles.successBox, styles.footerGap]}>
+            <Ionicons name="checkmark-circle-outline" size={18} color={COLORS.primary} />
+            <Text style={styles.successText}>Company profile saved.</Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={[styles.save, styles.flushTop, saving && styles.disabled]}
+          onPress={save}
+          disabled={saving || deleting}
+          activeOpacity={0.85}
+        >
+          {saving ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.saveText}>Save Company Profile</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  footerBar: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    backgroundColor: COLORS.bg,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  footerGap: { marginTop: 0, marginBottom: 10 },
+  flushTop: { marginTop: 0 },
   flex: { flex: 1, backgroundColor: COLORS.bg },
   content: { paddingHorizontal: 20, paddingBottom: 48 },
 

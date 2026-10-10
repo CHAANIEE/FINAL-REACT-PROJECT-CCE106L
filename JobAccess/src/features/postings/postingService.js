@@ -88,6 +88,18 @@ export async function reviewPosting(jobId, action, adminId) {
       reviewedBy: adminId,
       reviewedAt: serverTimestamp(),
     });
+
+    // Tell the employer their vacancy was approved
+    batch.set(doc(notificationsRef), {
+      audience: 'user',
+      userId: job.employerId,
+      type: 'vacancy_approved',
+      title: 'Vacancy approved',
+      message: `PESO reviewed and approved your vacancy "${job.title}". It stays live for job seekers.`,
+      refId: jobId,
+      read: false,
+      createdAt: serverTimestamp(),
+    });
   } else if (action === 'removed') {
     batch.update(jobRef, {
       status: 'removed',

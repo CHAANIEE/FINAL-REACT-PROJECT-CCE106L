@@ -110,7 +110,12 @@ export default function MyPostings() {
         const st = STATUS_STYLE[p.status] || STATUS_STYLE.live;
         const isLive = p.status === 'live';
         return (
-          <View key={p.id} style={styles.card}>
+          <TouchableOpacity
+            key={p.id}
+            style={styles.card}
+            activeOpacity={0.85}
+            onPress={() => router.push(`/(employer)/posting/${p.id}`)}
+          >
             <View style={styles.cardTop}>
               <View style={styles.iconBox}>
                 <Ionicons name="briefcase-outline" size={18} color={COLORS.primary} />
@@ -153,7 +158,7 @@ export default function MyPostings() {
                 </Text>
               </TouchableOpacity>
             )}
-          </View>
+          </TouchableOpacity>
         );
       })}
     </ScrollView>

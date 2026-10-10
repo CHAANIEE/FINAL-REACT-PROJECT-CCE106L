@@ -150,8 +150,7 @@ export default function EmployerDashboard() {
             key={p.id}
             style={styles.postingCard}
             activeOpacity={0.85}
-            disabled={!isLive}
-            onPress={() => router.push(`/(employer)/applicants/${p.id}`)}
+            onPress={() => router.push(`/(employer)/posting/${p.id}`)}
           >
             <View style={styles.postingIcon}>
               <Ionicons name="briefcase-outline" size={18} color={COLORS.primary} />
@@ -170,9 +169,7 @@ export default function EmployerDashboard() {
             <View style={[styles.statusPill, { backgroundColor: st.bg }]}>
               <Text style={[styles.statusText, { color: st.color }]}>{st.label}</Text>
             </View>
-            {isLive && (
-              <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
-            )}
+            <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
           </TouchableOpacity>
         );
       })}
